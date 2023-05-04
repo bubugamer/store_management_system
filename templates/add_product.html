@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <script>
+        <!-- 判断商品品类动态修改新增商品的信息 -->
+        function showAttributes() {
+            var category = document.getElementById('category');
+            var attributesContainer1 = document.getElementById('attributes-container1');
+            attributesContainer1.innerHTML = '';
+            var attributesContainer2 = document.getElementById('attributes-container2');
+            attributesContainer2.innerHTML = '';
+            if (category.value == 'Lens') {
+                attributesContainer1.innerHTML += '<div class="form-group"><label for="attribute1">球镜度数</label><input type="text" class="form-control" id="attribute1" name="attribute1"  value="{{ session['attribute1'] }}"></div>';
+                attributesContainer2.innerHTML += '<div class="form-group"><label for="attribute2">柱镜度数</label><input type="text" class="form-control" id="attribute2" name="attribute2"  value="{{ session['attribute2'] }}"></div>';
+            } else if (category.value == 'Frame') {
+                attributesContainer1.innerHTML += '<div class="form-group"><label for="attribute1">材质</label><input type="text" class="form-control" id="attribute1" name="attribute1" value="{{ session['attribute1'] }}"></div>';
+                attributesContainer2.innerHTML += '';
+            } else {
+                attributesContainer1.innerHTML += '';
+                attributesContainer2.innerHTML += '';
+            }
+        }
+
+        <!-- 点击提交按钮后的逻辑处理 -->
+        $(document).ready(function() {
+          $('#submit-btn').click(function(e) {
+            e.preventDefault();  // 阻止表单的默认提交行为
+            $.ajax({
+              url: '/submit_product',  // 提交的url
+              type: 'POST',  // 提交的方法
+              data: $('form').serialize(),  // 表单数据
+              success: function(data) {  // 成功回调函数
+                  if (data.success) {
+                        $('#submit-success-modal').modal('show');
+                  } else {
+                        $('#errorMessage').text(data.message);
+                        $('#submit-fail-modal').modal('show');
+                  }
+              },
+              error: function(xhr, status, error) {  // 失败回调函数
+                  $('#errorMessage').text(data.message);
+                  $('#submit-fail-modal').modal('show');
+              }
+            });
+          });
+        });
+    </script>
+
+    <h2>添加商品</h2>
+    <form method="POST" action="{{ url_for('submit_product') }}">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="name">名称</label>
+                    <input type="text" class="form-control" id="name" name="name" value={{barcode}} required>
+                </div>
+                <div class="form-group">
+                    <label for="category">品类</label>
+                    <select class="form-control" id="category" name="category" required onchange="showAttributes()" value="{{ session['category'] }}">
+                        <option value="Lens"{% if category == 'Lens' %} selected{% endif %}>镜片</option>
+                        <option value="Frame"{% if category == 'Frame' %} selected{% endif %}>镜架</option>
+                        <option value="Contact Lens"{% if category == 'Contact Lens' %} selected{% endif %}>隐形眼镜</option>
+                        <option value="Sunglasses"{% if category == 'Sunglasses' %} selected{% endif %}>太阳镜</option>
+                        <option value="Other"{% if category == 'Other' %} selected{% endif %}>其他</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="brand">品牌</label>
+                    <input type="text" class="form-control" id="brand" name="brand" value="{{ session['brand'] }}">
+                </div>
+                <div class="form-group">
+                    <label for="specification">型号</label>
+                    <input type="text" class="form-control" id="specification" name="specification" value="{{ session['specification'] }}">
+                </div>
+                <div class="form-group">
+                    <label for="remark">备注</label>
+                    <textarea class="form-control" id="remark" name="remark" rows="1">{{ session['remark'] }}</textarea>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="quantity">入库数量</label>
+                    <input type="number" class="form-control" id="quantity" name="quantity" value="1" required  value="{{ session['quantity'] }}">
+                </div>
+                <div class="form-group">
+                    <label for="unit">单位</label>
+                    <input type="text" class="form-control" id="unit" name="unit" value="{{ session['unit'] }}">
+                </div>
+                <div class="form-group">
+                    <label for="cost_price">进货价</label>
+                    <input type="number" class="form-control" id="cost_price" name="cost_price" value="{{ session['cost_price'] }}">
+                </div>
+                <div class="form-group">
+                    <label for="list_price">挂牌价</label>
+                    <input type="number" class="form-control" id="list_price" name="list_price" value="{{ session['list_price'] }}">
+                </div>
+                <div class="form-group">
+                    <label for="supplier">供应商</label>
+                    <input type="text" class="form-control" id="supplier" name="supplier" value="{{ session['supplier'] }}">
+                </div>
+            </div>
+            {% if category == 'Lens' %}
+                <div id="attributes-container1" class="col-md-6">
+                    <div class="form-group"><label for="attribute1">球镜度数</label><input type="text" class="form-control" id="attribute1" name="attribute1" value="{{ session['attribute1'] }}"></div>
+                </div>
+                <div id="attributes-container2" class="col-md-6">
+                    <div class="form-group"><label for="attribute2">柱镜度数</label><input type="text" class="form-control" id="attribute2" name="attribute2" value="{{ session['attribute2'] }}"></div>
+                </div>
+            {% elif category == 'Frame' %}
+                <div id="attributes-container1" class="col-md-6">
+                    <div class="form-group"><label for="attribute1">材质</label><input type="text" class="form-control" id="attribute1" name="attribute1" value="{{ session['attribute1'] }}"></div>
+                </div>
+                <div id="attributes-container2" class="col-md-6"></div>
+            {% else %}
+                <div id="attributes-container1" class="col-md-6"></div>
+                <div id="attributes-container2" class="col-md-6"></div>
+            {% endif %}
+        </div>
+        <hr>
+        <div class="row">
+            <div class="col-md-12">
+
+            </div>
+            <div class="col-md-12">
+                <div class="form-group">
+                    <img src="{{ url_for('barcode_image', barcode=barcode) }}" style="max-width: 10%; height: auto;">
+                    <input type="hidden" name="rawbarcode" value={{barcode}}>
+                </div>
+            </div>
+        </div>
+        <button type="button" class="btn btn-primary" id="submit-btn">提交</button>
+    </form>
+
+    <!-- 成功后弹窗 -->
+    <div class="modal fade" id="submit-success-modal" tabindex="-1" role="dialog" aria-labelledby="submit-modal-label" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="submit-modal-label">提交成功</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body center-text">
+                  商品已成功添加到库存中
+                </div>
+                <div class="modal-footer">
+                    <a class="btn btn-primary" href="{{ url_for('products_list') }}">返回</a>
+                    <a class="btn btn-primary" href="{{ url_for('add_product', category=session['category']) }}">继续录入</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 失败后弹窗 -->
+    <div class="modal fade" id="submit-fail-modal" tabindex="-1" role="dialog" aria-labelledby="submit-modal-label" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="submit-modal-label">提交失败</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    提交失败，请联系管理员.错误信息:
+                    <p id="errorMessage"></p>
+                </div>
+                <div class="modal-footer">
+                    <a class="btn btn-primary" href="{{ url_for('products_list') }}">返回</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

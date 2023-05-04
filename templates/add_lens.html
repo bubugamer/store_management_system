@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+    <!-- 判断商品品类动态修改新增商品的信息 -->
+    <script>
+        function showAttributes() {
+            var category = document.getElementById('category');
+            var attributesContainer1 = document.getElementById('attributes-container1');
+            attributesContainer1.innerHTML = '';
+            var attributesContainer2 = document.getElementById('attributes-container2');
+            attributesContainer2.innerHTML = '';
+            if (category.value == 'Lens') {
+                attributesContainer1.innerHTML += '<div class="form-group"><label for="attribute1">球镜度数</label><input type="text" class="form-control" id="attribute1" name="attribute1"></div>';
+                attributesContainer2.innerHTML += '<div class="form-group"><label for="attribute2">柱镜度数</label><input type="text" class="form-control" id="attribute2" name="attribute2"></div>';
+            } else if (category.value == 'Frame') {
+                attributesContainer1.innerHTML += '<div class="form-group"><label for="attribute1">材质</label><input type="text" class="form-control" id="attribute1" name="attribute1"></div>';
+                attributesContainer2.innerHTML += '';
+            } else {
+                attributesContainer1.innerHTML += '';
+                attributesContainer2.innerHTML += '';
+            }
+        }
+    </script>
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $('#submit').click(function(event) {
+                event.preventDefault();
+                $.ajax({
+                    type: 'POST',
+                    url: '/submit_product',
+                    data: $('form').serialize(),
+                    success: function(response) {
+                        if (response.success) {
+                            $('#myModal').modal('show');
+                            $('#continue').click(function() {
+                                // 继续录入
+                                $('#myModal').modal('hide');
+                                $('form').trigger('reset');
+                            });
+                            $('#back').click(function() {
+                                // 返回
+                                window.location.href = '/products';
+                            });
+                        } else {
+                            alert(response.message);
+                        }
+                    },
+                    error: function(error) {
+                        alert('提交失败，请重试！');
+                    }
+                });
+            });
+        });
+    </script>
+
+
+
+    <h2>添加商品</h2>
+    <form method="POST" action="{{ url_for('submit_product') }}">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="name">商品名称</label>
+                    <input type="text" class="form-control" id="name" name="name" value={{barcode}} required>
+                </div>
+                <div class="form-group">
+                    <label for="category">品类</label>
+                    <select class="form-control" id="category" name="category" required onchange="showAttributes()">
+                        <option value="Lens"{% if category == 'Lens' %} selected{% endif %}>镜片</option>
+                        <option value="Frame"{% if category == 'Frame' %} selected{% endif %}>镜架</option>
+                        <option value="Contact Lens"{% if category == 'Contact Lens' %} selected{% endif %}>隐形眼镜</option>
+                        <option value="Sunglasses"{% if category == 'Sunglasses' %} selected{% endif %}>太阳镜</option>
+                        <option value="Other"{% if category == 'Other' %} selected{% endif %}>其他</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="brand">品牌</label>
+                    <input type="text" class="form-control" id="brand" name="brand">
+                </div>
+                <div class="form-group">
+                    <label for="specification">型号</label>
+                    <input type="text" class="form-control" id="specification" name="specification">
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="status">状态</label>
+                    <input type="text" class="form-control" id="status" name="status" value="新入库" required disabled="disabled">
+                </div>
+                <div class="form-group">
+                    <label for="unit">单位</label>
+                    <input type="text" class="form-control" id="unit" name="unit" value="件">
+                </div>
+                <div class="form-group">
+                    <label for="cost_price">进货价</label>
+                    <input type="number" class="form-control" id="cost_price" name="cost_price" value="0.00">
+                </div>
+                <div class="form-group">
+                    <label for="supplier">供应商</label>
+                    <input type="text" class="form-control" id="supplier" name="supplier" value="无">
+                </div>
+            </div>
+            {% if category == 'Lens' %}
+                <div id="attributes-container1" class="col-md-6">
+                    <div class="form-group"><label for="attribute1">球镜度数</label><input type="text" class="form-control" id="attribute1" name="attribute1"></div>
+                </div>
+                <div id="attributes-container2" class="col-md-6">
+                    <div class="form-group"><label for="attribute2">柱镜度数</label><input type="text" class="form-control" id="attribute2" name="attribute2"></div>
+                </div>
+            {% elif category == 'Frame' %}
+                <div id="attributes-container1" class="col-md-6">
+                    <div class="form-group"><label for="attribute1">材质</label><input type="text" class="form-control" id="attribute1" name="attribute1"></div>
+                </div>
+                <div id="attributes-container2" class="col-md-6"></div>
+            {% else %}
+                <div id="attributes-container1" class="col-md-6"></div>
+                <div id="attributes-container2" class="col-md-6"></div>
+            {% endif %}
+        </div>
+        <hr>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="form-group">
+                    <label for="remark">备注</label>
+                    <textarea class="form-control" id="remark" name="remark" rows="3"></textarea>
+                </div>
+            </div>
+            <div class="col-md-12">
+                <div class="form-group">
+                    <img src="{{ url_for('barcode_image', barcode=barcode) }}" style="max-width: 10%; height: auto;">
+                    <input type="hidden" name="rawbarcode" value={{barcode}}>
+                </div>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary", onclick="submitForm()">提交</button>
+    </form>
+
+    <!-- 新增代码 -->
+    <div class="modal fade" id="submit-modal" tabindex="-1" role="dialog" aria-labelledby="submit-modal-label" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="submit-modal-label">提交成功</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    商品已成功添加到库存中。
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">返回</button>
+                    <a class="btn btn-primary" href="{{ url_for('add_product', category='Sunglasses') }}">继续录入</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

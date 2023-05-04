@@ -1,0 +1,606 @@
+<head>
+    <!-- DataTables CSS -->
+{#    <link rel="stylesheet" type="text/css" href="http://cdn.datatables.net/1.10.21/css/jquery.dataTables.css"/>#}
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.11.3/datatables.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"/>
+{#    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4/dt-1.11.2/datatables.min.css"/>#}
+</head>
+
+{% extends 'base.html' %}
+
+{% block title %}商品列表{% endblock %}
+
+{% block scripts %}
+
+    <script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.11.3/datatables.min.js"></script>
+{#    <script type="text/javascript" src="https://cdn.datatables.net/v/bs4/dt-1.11.2/datatables.min.js"></script>#}
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/2.0.0/js/dataTables.buttons.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/2.0.0/js/buttons.html5.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/2.0.0/js/buttons.print.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.5/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.70/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.70/vfs_fonts.js"></script>
+
+	<script>
+
+        $(document).ready(function() {
+            var producttable = $('#product-table').DataTable({
+                "dom": '<"row"<f"col-sm-12 col-md-4"><"col-sm-12 col-md-8"B>>rtip',
+                "buttons": [
+                    {
+                        extend: 'copy',
+                        className: 'btn-secondary'
+                    },
+                    {
+                        extend: 'excel',
+                        className: 'btn-secondary'
+                    },
+                    {
+                        extend: 'pdfHtml5',
+                        className: 'btn-secondary'
+                    }
+                ],
+                "order": [[0, "asc"]],
+                "pageLength":100,
+                "lengthChange": false,
+                "columnDefs": [
+                {
+                  "targets": 'no-sort',
+                  "orderable": false,
+                  "sortable": false
+                }
+              ]
+            });
+
+            var soldtable = $('#sold-table').DataTable({
+                "dom": '<"row"<f"col-sm-12 col-md-4"><"col-sm-12 col-md-8"B>>rtip',
+                "buttons": [
+                    {
+                        extend: 'copy',
+                        className: 'btn-secondary'
+                    },
+                    {
+                        extend: 'excel',
+                        className: 'btn-secondary'
+                    },
+                    {
+                        extend: 'pdfHtml5',
+                        className: 'btn-secondary'
+                    }
+                ],
+                "order": [[0, "asc"]],
+                "pageLength":100,
+                "lengthChange": false,
+                "columnDefs": [
+                {
+                  "targets": 'no-sort',
+                  "orderable": false,
+                  "sortable": false
+                }
+              ]
+            });
+
+            var abandonmenttable = $('#abandonment-table').DataTable({
+                "dom": '<"row"<f"col-sm-12 col-md-4"><"col-sm-12 col-md-8"B>>rtip',
+                "buttons": [
+                    {
+                        extend: 'copy',
+                        className: 'btn-secondary'
+                    },
+                    {
+                        extend: 'excel',
+                        className: 'btn-secondary'
+                    },
+                    {
+                        extend: 'pdfHtml5',
+                        className: 'btn-secondary'
+                    }
+                ],
+                "order": [[0, "asc"]],
+                "pageLength":100,
+                "lengthChange": false,
+                "columnDefs": [
+                {
+                  "targets": 'no-sort',
+                  "orderable": false,
+                  "sortable": false
+                }
+              ]
+            });
+
+            $('#sold-table_wrapper').hide(); //将soldtable的wrapper隐藏
+            $('#abandonment-table_wrapper').hide(); //将abandonmenttable的wrapper隐藏
+
+            // 切换到在库商品表格
+			$('#inventory-btn').on('click', function() {
+				$('#product-table').show();
+                $('#product-table_wrapper').show();
+				$('#sold-table').hide();
+                $('#sold-table_wrapper').hide();
+                $('#abandonment-table').hide();
+                $('#abandonment-table_wrapper').hide();
+			});
+			// 切换到已出库商品表格
+			$('#sold-btn').on('click', function() {
+				$('#sold-table').show();
+                $('#sold-table_wrapper').show();
+				$('#product-table').hide();
+                $('#product-table_wrapper').hide();
+                $('#abandonment-table').hide();
+                $('#abandonment-table_wrapper').hide();
+			});
+			// 切换到报废商品表格
+			$('#abandonment-btn').on('click', function() {
+				$('#abandonment-table').show();
+                $('#abandonment-table_wrapper').show();
+				$('#product-table').hide();
+                $('#product-table_wrapper').hide();
+                $('#sold-table').hide();
+                $('#sold-table_wrapper').hide();
+			});
+        });
+
+        function sellProduct(productId) {
+            $('#sellconfirm').modal('show');
+            $('#sell-confirm-btn').off('click').on('click', function() {
+                var outtime = $('#outbound-time').val();
+                var salesPerson = $('#sales-person').val();
+                var sellPrice = $('#sell-price').val();
+                $.ajax({
+                    url: '/sell_product',
+                    type: 'POST',
+                    data: {
+                        product_id:productId,
+                        out_time: outtime,
+                        salesPerson: salesPerson,
+                        sell_price: sellPrice
+                    },
+                    success: function(data) {
+                        if (data.success) {
+                            alert('出库成功');
+                            window.location.reload();
+                        } else {
+                            alert('出库失败' + data.message);
+                        }
+                    }
+                });
+                $('#sellconfirm').modal('hide');
+            });
+        }
+
+        function discardProduct(productData) {
+            var productId = productData.id;
+            var productRemark = productData.remark;
+            $('#remark').val(productRemark);
+            $('#discardconfirm').modal('show');
+            $('#out-confirm-btn').off('click').on('click', function() {
+                var outtime = $('#outbound-time').val();
+                var remark = $('#remark').val();
+                $.ajax({
+                    url: '/discard_product',
+                    type: 'POST',
+                    data: {
+                        product_id: productId,
+                        out_time: outtime,
+                        remark: remark
+                    },
+                    success: function(data) {
+                        if (data.success) {
+                            alert('报废成功');
+                            window.location.reload();
+                        } else {
+                            alert('报废失败' + data.message);
+                        }
+                    }
+                });
+                $('#discardconfirm').modal('hide');
+            });
+        }
+
+        function viewProduct(productId) {
+            $.ajax({
+                url: '/get_product_info',
+                type: 'GET',
+                data: {
+                    product_id: productId
+                },
+                success: function (response) {
+                    if (response.status === 'success') {
+                        var product = response.data;
+                        $('#viewproductmodal #product-name').text(product.name);
+                        $('#viewproductmodal #product-category').text(product.category);
+                        $('#viewproductmodal #product-brand').text(product.brand);
+                        $('#viewproductmodal #product-cost-price').text(product.cost_price);
+                        $('#viewproductmodal #product-supplier').text(product.supplier);
+                        $('#viewproductmodal #product-list-price').text(product.list_price);
+                        $('#viewproductmodal #product-sales-price').text(product.sales_price);
+                        $('#viewproductmodal #product-salesperson').text(product.salesperson);
+                        $('#viewproductmodal #product-unit').text(product.unit);
+                        $('#viewproductmodal #product-specification').text(product.specification);
+                        $('#viewproductmodal #product-barcode').text(product.barcode);
+                        $('#viewproductmodal #product-remark').text(product.remark);
+                        $('#viewproductmodal #product-attribute1').text(product.attribute1);
+                        $('#viewproductmodal #product-attribute2').text(product.attribute2);
+                        $('#viewproductmodal #product-attribute3').text(product.attribute3);
+                        $('#viewproductmodal #product-attribute4').text(product.attribute4);
+                        $('#viewproductmodal #product-attribute5').text(product.attribute5);
+                        $('#viewproductmodal #product-in-time').text(product.in_time);
+                        $('#viewproductmodal #product-out-time').text(product.out_time);
+                        $('#viewproductmodal #product-abandonment-time').text(product.abandonment_time);
+
+                        // Convert barcode to barcode image and set as src attribute of an img tag
+                        //var barcode = product.barcode;
+                        //var img = document.createElement('img');
+                        //img.src = 'data:image/png;base64,' + barcode;
+                        //console.log(`Selected value: ${img.src}`);
+                        //$('#viewproductmodal #product-barcodeImg').empty().append(img);
+                        $('#viewproductmodal #product-barcodeImg').attr('src', 'data:image/png;base64,' + product.barcode);
+
+                        $('#viewproductmodal').modal('show');
+                    } else {
+                        alert('获取商品信息失败');
+                    }
+                }
+            });
+        }
+	</script>
+{% endblock %}
+
+{% block content %}
+    <div class="row mb-3">
+        <div class="col-md-6 text-left">
+            <button id="inventory-btn" class="btn btn-secondary">在库商品</button>
+            <button id="sold-btn"  class="btn btn-secondary">已售商品</button>
+            <button id="abandonment-btn"  class="btn btn-secondary">报废商品</button>
+        </div>
+        <div class="col-md-6 text-right">
+            <a href="{{ url_for('add_product', category='Sunglasses') }}" class="btn btn-primary">录入商品</a>
+            <a href="{{ url_for('add_product', category='Lens') }}" class="btn btn-primary">录入镜片</a>
+            <a href="{{ url_for('add_product', category='Frame') }}" class="btn btn-primary">录入镜架</a>
+        </div>
+    </div>
+	<table id="product-table" class="table">
+		<thead>
+			<tr>
+                <th data-sort="0">名称</th>
+                <th data-sort="1">种类</th>
+                <th data-sort="2">品牌</th>
+                <th data-sort="3">型号</th>
+                <th data-sort="4">供应商</th>
+                <th data-sort="5">进货价</th>
+                <th data-sort="6">数量</th>
+                <th data-sort="7">入库时间</th>
+                <th class="no-sort">备注</th>
+                <th class="no-sort">操作</th>
+			</tr>
+		</thead>
+		<tbody>
+            <!-- 设置变量，如果是重复出现的名字就不再显示-->
+            {% set displayed_names = [] %}
+			{% for product in products %}
+                {% if product.name not in displayed_names %}
+                    <tr>
+                        <td>{{ product.name }}</td>
+                        <td>{{ product.category }}</td>
+                        <td>{{ product.brand }}</td>
+                        <td>{{ product.specification }}</td>
+                        <td>{{ product.supplier }}</td>
+                        <td>{{ product.cost_price }}</td>
+                        <td>{{ quantity_dict[product.name] }}</td>
+                        <td>{{ product.in_time.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                        <td>{{ product.remark }}</td>
+                        <td>
+                            <button class="btn btn-light" onclick="sellProduct({{ product.id }})">销售</button>
+                            <button class="btn btn-light" onclick='discardProduct({{ {"id": product.id, "remark": product.remark} | tojson }})'>报废</button>
+                            <a href="{{ url_for('edit_product', product_id=product.id) }}" class="btn btn-light">修改</a>
+                            <button class="btn btn-light" onclick="viewProduct({{ product.id }})">查看</button>
+                            <button class="btn btn-light" onclick="addStock({{ product.id }})">加库存</button>
+                        </td>
+                    </tr>
+                    {% set _ = displayed_names.append(product.name) %}
+                {% endif %}
+			{% endfor %}
+		</tbody>
+	</table>
+
+    <table id="sold-table" style="display: none;" class="table">
+		<thead>
+			<tr>
+				<th data-sort="0">id</th>
+				<th data-sort="1">名称</th>
+                <th data-sort="2">种类</th>
+                <th data-sort="3">品牌</th>
+                <th data-sort="4">型号</th>
+                <th data-sort="5">供应商</th>
+                <th data-sort="6">进货价</th>
+                <th data-sort="7">售价</th>
+                <th data-sort="8">出库时间</th>
+				<th data-sort="9">入库时间</th>
+                <th class="no-sort">备注</th>
+				<th class="no-sort">操作</th>
+			</tr>
+		</thead>
+		<tbody>
+		    {% for sold in solds %}
+                <tr>
+                    <td>{{ sold.id }}</td>
+                    <td>{{ sold.name }}</td>
+                    <td>{{ sold.category }}</td>
+                    <td>{{ sold.brand }}</td>
+                    <td>{{ sold.specification }}</td>
+                    <td>{{ sold.supplier }}</td>
+                    <td>{{ sold.cost_price }}</td>
+                    <td>{{ sold.sales_price }}</td>
+                    <td>{{ sold.out_time.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                    <td>{{ sold.in_time.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                    <td>{{ sold.remark }}</td>
+                    <td>
+                            <button class="btn btn-light" onclick='discardProduct({{ {"id": sold.id, "remark": sold.remark} | tojson }})'>报废</button>
+                    </td>
+                </tr>
+            {% endfor %}
+		</tbody>
+	</table>
+
+    <table id="abandonment-table" style="display: none;" class="table">
+		<thead>
+			<tr>
+				<th data-sort="0">id</th>
+				<th data-sort="1">名称</th>
+                <th data-sort="2">种类</th>
+                <th data-sort="3">品牌</th>
+                <th data-sort="4">型号</th>
+                <th data-sort="5">供应商</th>
+                <th data-sort="6">进货价</th>
+                <th data-sort="7">售价</th>
+                <th data-sort="8">出库时间</th>
+				<th data-sort="9">入库时间</th>
+                <th class="no-sort">备注</th>
+			</tr>
+		</thead>
+		<tbody>
+		    {% for abandonment in abandonments %}
+                <tr>
+                    <td>{{ abandonment.id }}</td>
+                    <td>{{ abandonment.name }}</td>
+                    <td>{{ abandonment.category }}</td>
+                    <td>{{ abandonment.brand }}</td>
+                    <td>{{ abandonment.specification }}</td>
+                    <td>{{ abandonment.supplier }}</td>
+                    <td>{{ abandonment.cost_price }}</td>
+                    <td>{{ abandonment.sales_price }}</td>
+                    <td>{{ abandonment.out_time.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                    <td>{{ abandonment.in_time.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                    <td>{{ abandonment.remark }}</td>
+                </tr>
+            {% endfor %}
+		</tbody>
+	</table>
+
+    <!-- 销售出库模态框 -->
+    <div class="modal fade" id="sellconfirm" tabindex="-1" role="dialog" aria-labelledby="outDialogLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="outDialogLabel">销售确认</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="row">
+                    <div class="col-md-1"></div>
+                    <div class="col-md-10">
+                        <div class="form-group">
+                            <label for="outbound-time" class="bold-label">出库时间：</label>
+                            <div class="input-group">
+                                <input type="datetime-local" class="form-control" id="outbound-time" name="outbound-time">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="sales-person" class="bold-label">销售人员：</label>
+                            <div class="input-group">
+                                <select class="form-control " id="sales-person" name="sales-person">
+                                    <option value="店员1">店员1</option>
+                                    <option value="店员2">店员2</option>
+                                    <option value="店长">店长</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="sell-price" class="bold-label">售价：</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="sell-price" name="sell-price" step="0.01">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                            <button type="button" class="btn btn-primary" id="sell-confirm-btn">确定</button>
+                        </div>
+                    </div>
+                    <div class="col-md-1"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 报废出库模态框 -->
+    <div class="modal fade" id="discardconfirm" tabindex="-1" role="dialog" aria-labelledby="outDialogLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="outDialogLabel">报废确认</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="row">
+                    <div class="col-md-1">
+                    </div>
+                    <div class="col-md-10">
+                        <div class="form-group">
+                            <label for="outbound-time" class="bold-label">出库时间：</label>
+                            <div class="input-group">
+                                <input type="datetime-local" class="form-control" id="outbound-time" name="outbound-time">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="remark" class="bold-label">备注：</label>
+                            <div class="input-group">
+                                <textarea class="form-control" id="remark" name="remark" rows="1"></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                            <button type="button" class="btn btn-primary" id="out-confirm-btn">确定</button>
+                        </div>
+                    </div>
+                    <div class="col-md-1"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 模态框 HTML 代码 -->
+    <div class="modal fade" id="viewproductmodal" tabindex="-1" role="dialog" aria-labelledby="viewproductmodalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="row">
+{#                        <h5 class="modal-title" id="product-name"></h5>#}
+                        <div class="col">
+                            <h5 class="modal-title" id="viewproductmodalLabel">商品信息</h5>
+                            <img id="product-barcodeImg" src="" style="max-width: 150%; height: auto;">
+                        </div>
+                    </div>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="product-name" class="bold-label">名称:</label>
+                            </div>
+                            <div class="form-group" >
+                                <span id="product-name"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="product-category" class="bold-label">品类:</label>
+                            </div>
+                            <div class="form-group">
+                                <span id="product-category"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="product-brand" class="bold-label">品牌:</label>
+                            </div>
+                            <div class="form-group">
+                                <span id="product-brand"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="product-cost-price" class="bold-label">成本价:</label>
+                            </div>
+                            <div class="form-group">
+                                <span id="product-cost-price"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="product-supplier" class="bold-label">供应商:</label>
+                            </div>
+                            <div class="form-group">
+                                <span id="product-supplier"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="product-list-price" class="bold-label">挂牌价:</label>
+                            </div>
+                            <div class="form-group">
+                                <span id="product-list-price"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="product-sales-price" class="bold-label">成交价:</label>
+                            </div>
+                            <div class="form-group">
+                                <span id="product-sales-price"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="product-salesperson" class="bold-label">销售员:</label>
+                            </div>
+                            <div class="form-group">
+                                <span id="product-salesperson"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="product-unit" class="bold-label">单位:</label>
+                            </div>
+                            <div class="form-group">
+                                <span id="product-unit"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="product-specification" class="bold-label">规格:</label>
+                            </div>
+                            <div class="form-group">
+                                <span id="product-specification"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="product-remark" class="bold-label">备注:</label>
+                            </div>
+                            <div class="form-group">
+                                <span id="product-remark"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="product-attribute1" class="bold-label">属性1:</label>
+                            </div>
+                            <div class="form-group">
+                                <span id="product-attribute1"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="product-attribute2" class="bold-label">属性2:</label>
+                            </div>
+                            <div class="form-group">
+                                <span id="product-attribute2"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="product-attribute3" class="bold-label">属性3:</label>
+                            </div>
+                            <div class="form-group">
+                                <span id="product-attribute3"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="product-attribute4" class="bold-label">属性4:</label>
+                            </div>
+                            <div class="form-group">
+                                <span id="product-attribute4"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="product-attribute5" class="bold-label">属性5:</label>
+                            </div>
+                            <div class="form-group">
+                                <span id="product-attribute5"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="product-in-time" class="bold-label">入库时间:</label>
+                            </div>
+                            <div class="form-group">
+                                <span id="product-in-time"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="product-out-time" class="bold-label">出库时间:</label>
+                            </div>
+                            <div class="form-group">
+                                <span id="product-out-time"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="product-abandonment-time" class="bold-label">报废时间:</label>
+                            </div>
+                            <div class="form-group">
+                                <span id="product-abandonment-time"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

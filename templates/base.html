@@ -1,0 +1,113 @@
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %} {% endblock %}</title>
+    <link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/4.0.0/css/bootstrap.min.css"/>
+    {% block styles %}
+        <style>
+            .center-text {
+                text-align: center;
+            }
+            .btn-default:hover {
+                color: #333;
+                background-color: #e6e6e6;
+                border-color: #adadad;
+            }
+            .btn-danger {
+              color: #fff;
+              background-color: #dc3545;
+              border-color: #dc3545;
+            }
+            .btn-danger:hover {
+              color: #fff;
+              background-color: #c82333;
+              border-color: #bd2130;
+            }
+            .btn-copy {
+              background-color: #007bff;
+              color: #fff;
+            }
+            .btn-primary {
+              color: #fff;
+              background-color: #007bff;
+              border-color: #007bff;
+            }
+            .btn-primary:hover {
+              color: #fff;
+              background-color: #0069d9;
+              border-color: #0062cc;
+            }
+            .btn-secondary {
+              color: #fff;
+              background-color: #6c757d;
+              border-color: #6c757d;
+            }
+            .btn-secondary:hover {
+              color: #fff;
+              background-color: #5a6268;
+              border-color: #545b62;
+            }
+            .bold-label {
+              font-weight: bold;
+            }
+
+            #product-barcodeImg {
+                width: 100px;
+                height: 50px;
+            }
+        </style>
+    {% endblock %}
+</head>
+<body>
+
+    <!-- <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.slim.min.js"></script>-->
+    <!-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+        integrity="sha384-/dXQvKR8LWJScmZEXL3kbYXyVRnosK3+j6E59gYj1RheaXMJLw6MlZB6kL0W2OJh"
+        crossorigin="anonymous"></script> 添加这个无法显示排序箭头，不知道什么原因 -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.bootcss.com/popper.js/1.12.9/umd/popper.min.js"></script>
+    <script src="https://cdn.bootcss.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+
+
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <a class="navbar-brand" href="#">大光明眼镜店</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item {% if active_page == 'product' %}active{% endif %}">
+                    <a class="nav-link" href="{{ url_for('products_list') }}">商品管理</a>
+                </li>
+                <li class="nav-item {% if active_page == 'sales' %}active{% endif %}">
+                    <a class="nav-link" href="{{ url_for('sales_list') }}">销售管理</a>
+                </li>
+                <li class="nav-item {% if active_page == 'employee' %}active{% endif %}">
+                    <a class="nav-link" href="{{ url_for('employee_list') }}">员工管理</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <div class="container-fluid mt-3">
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <div class="row">
+            <div class="col-md-12">
+                {% for message in messages %}
+                <div class="alert alert-{{ message[0] }}" role="alert">
+                    {{ message[1] }}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        {% endwith %}
+        {% block content %}
+        {% endblock %}
+    </div>
+    {% block scripts %}
+    {% endblock %}
+</body>
+</html>
