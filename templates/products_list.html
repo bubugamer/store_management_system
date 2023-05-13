@@ -174,14 +174,14 @@
             $('#remark').val(productRemark);
             $('#discardconfirm').modal('show');
             $('#out-confirm-btn').off('click').on('click', function() {
-                var outtime = $('#outbound-time').val();
+                var abandonmenttime = $('#abandonment-time').val();
                 var remark = $('#remark').val();
                 $.ajax({
                     url: '/discard_product',
                     type: 'POST',
                     data: {
                         product_id: productId,
-                        out_time: outtime,
+                        abandonment_time: abandonmenttime,
                         remark: remark
                     },
                     success: function(data) {
@@ -229,11 +229,6 @@
                         $('#viewproductmodal #product-abandonment-time').text(product.abandonment_time);
 
                         // Convert barcode to barcode image and set as src attribute of an img tag
-                        //var barcode = product.barcode;
-                        //var img = document.createElement('img');
-                        //img.src = 'data:image/png;base64,' + barcode;
-                        //console.log(`Selected value: ${img.src}`);
-                        //$('#viewproductmodal #product-barcodeImg').empty().append(img);
                         $('#viewproductmodal #product-barcodeImg').attr('src', 'data:image/png;base64,' + product.barcode);
 
                         $('#viewproductmodal').modal('show');
@@ -242,6 +237,35 @@
                     }
                 }
             });
+        }
+
+        // 在product_list页面加库存按钮的click事件
+        function addStock(product_id) {
+            $.ajax({
+                url: '/add_stock/' + product_id,
+                type: 'POST',
+                success: function (data) {
+                    if (data.success) {
+                        // 新增库存成功，弹出成功模态框提示用户
+                        $('#addStockSuccessModal').modal('show');
+                    } else {
+                        // 新增库存失败，弹出失败模态框提示用户
+                        $('#addStockFailedModal .modal-body').text(data.message);
+                        {#$('#errorMessage').text(data.message);#}
+                        $('#addStockFailedModal').modal('show');
+                    }
+                },
+                error: function () {
+                    // 异常情况，弹出错误模态框提示用户
+                    $('#addStockFailedModal').modal('show');
+                }
+            });
+        }
+
+        // 返回按钮的点击事件处理函数
+        function handleReturn() {
+            // 重定向到当前页面
+            location.reload();
         }
 	</script>
 {% endblock %}
@@ -254,9 +278,9 @@
             <button id="abandonment-btn"  class="btn btn-secondary">报废商品</button>
         </div>
         <div class="col-md-6 text-right">
-            <a href="{{ url_for('add_product', category='Sunglasses') }}" class="btn btn-primary">录入商品</a>
-            <a href="{{ url_for('add_product', category='Lens') }}" class="btn btn-primary">录入镜片</a>
-            <a href="{{ url_for('add_product', category='Frame') }}" class="btn btn-primary">录入镜架</a>
+            <a href="{{ url_for('add_product', category=session['category'] if session['category'] else 'Sunglasses') }}" class="btn btn-primary">通用商品录入</a>
+            <a href="{{ url_for('add_product', category='Lens') }}" class="btn btn-primary">镜片录入</a>
+            <a href="{{ url_for('add_product', category='Frame') }}" class="btn btn-primary">镜架录入</a>
         </div>
     </div>
 	<table id="product-table" class="table">
@@ -291,8 +315,8 @@
                         <td>{{ product.remark }}</td>
                         <td>
                             <button class="btn btn-light" onclick="sellProduct({{ product.id }})">销售</button>
-                            <button class="btn btn-light" onclick='discardProduct({{ {"id": product.id, "remark": product.remark} | tojson }})'>报废</button>
-                            <a href="{{ url_for('edit_product', product_id=product.id) }}" class="btn btn-light">修改</a>
+{#                            <button class="btn btn-light" onclick='discardProduct({{ {"id": product.id, "remark": product.remark} | tojson }})'>报废</button>#}
+                            <a href="{{ url_for('edit_products', product_id=product.id) }}" class="btn btn-light">修改</a>
                             <button class="btn btn-light" onclick="viewProduct({{ product.id }})">查看</button>
                             <button class="btn btn-light" onclick="addStock({{ product.id }})">加库存</button>
                         </td>
@@ -312,8 +336,8 @@
                 <th data-sort="3">品牌</th>
                 <th data-sort="4">型号</th>
                 <th data-sort="5">供应商</th>
-                <th data-sort="6">进货价</th>
-                <th data-sort="7">售价</th>
+                <th data-sort="6">挂牌价</th>
+                <th data-sort="7">成交价</th>
                 <th data-sort="8">出库时间</th>
 				<th data-sort="9">入库时间</th>
                 <th class="no-sort">备注</th>
@@ -329,13 +353,14 @@
                     <td>{{ sold.brand }}</td>
                     <td>{{ sold.specification }}</td>
                     <td>{{ sold.supplier }}</td>
-                    <td>{{ sold.cost_price }}</td>
+                    <td>{{ sold.list_price }}</td>
                     <td>{{ sold.sales_price }}</td>
-                    <td>{{ sold.out_time.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                    <td>{% if sold.out_time %} {{ sold.out_time.strftime('%Y-%m-%d %H:%M:%S') }} {% endif %}</td>
                     <td>{{ sold.in_time.strftime('%Y-%m-%d %H:%M:%S') }}</td>
                     <td>{{ sold.remark }}</td>
                     <td>
                             <button class="btn btn-light" onclick='discardProduct({{ {"id": sold.id, "remark": sold.remark} | tojson }})'>报废</button>
+                            <a href="{{ url_for('edit_product', product_id=sold.id) }}" class="btn btn-light">修改</a>
                     </td>
                 </tr>
             {% endfor %}
@@ -354,7 +379,7 @@
                 <th data-sort="6">进货价</th>
                 <th data-sort="7">售价</th>
                 <th data-sort="8">出库时间</th>
-				<th data-sort="9">入库时间</th>
+				<th data-sort="9">报废时间</th>
                 <th class="no-sort">备注</th>
 			</tr>
 		</thead>
@@ -369,8 +394,8 @@
                     <td>{{ abandonment.supplier }}</td>
                     <td>{{ abandonment.cost_price }}</td>
                     <td>{{ abandonment.sales_price }}</td>
-                    <td>{{ abandonment.out_time.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-                    <td>{{ abandonment.in_time.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                    <td>{% if abandonment.out_time %} {{ abandonment.out_time.strftime('%Y-%m-%d %H:%M:%S') }} {% endif %}</td>
+                    <td>{{ abandonment.abandonment_time.strftime('%Y-%m-%d %H:%M:%S') }}</td>
                     <td>{{ abandonment.remark }}</td>
                 </tr>
             {% endfor %}
@@ -438,9 +463,9 @@
                     </div>
                     <div class="col-md-10">
                         <div class="form-group">
-                            <label for="outbound-time" class="bold-label">出库时间：</label>
+                            <label for="abandonment-time" class="bold-label">报废时间：</label>
                             <div class="input-group">
-                                <input type="datetime-local" class="form-control" id="outbound-time" name="outbound-time">
+                                <input type="datetime-local" class="form-control" id="abandonment-time" name="abandonment-time">
                             </div>
                         </div>
                         <div class="form-group">
@@ -460,7 +485,7 @@
         </div>
     </div>
 
-    <!-- 模态框 HTML 代码 -->
+    <!-- 查看商品模态框  -->
     <div class="modal fade" id="viewproductmodal" tabindex="-1" role="dialog" aria-labelledby="viewproductmodalLabel"
          aria-hidden="true">
         <div class="modal-dialog" role="document">
@@ -602,5 +627,48 @@
             </div>
         </div>
     </div>
+
+    <!-- 加库存成功提示模态框 -->
+    <div class="modal fade" id="addStockSuccessModal" tabindex="-1" role="dialog"
+         aria-labelledby="addStockSuccessModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addStockSuccessModalLabel">提示</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    库存已增加！
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="handleReturn()">返回</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 加库存失败提示模态框 -->
+    <div class="modal fade" id="addStockFailedModal" tabindex="-1" role="dialog"
+         aria-labelledby="addStockSuccessModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addStockSuccessModalLabel">提示</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    库存添加失败，错误信息：
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="handleReturn()">返回</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
 {% endblock %}

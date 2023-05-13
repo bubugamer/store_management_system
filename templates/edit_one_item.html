@@ -8,7 +8,7 @@
           $('#submit-btn').click(function(e) {
             e.preventDefault();  // 阻止表单的默认提交行为
             $.ajax({
-              url: '/submit_edit',  // 提交的url
+              url: '/submit_edit_one_item',  // 提交的url
               type: 'POST',  // 提交的方法
               data: $('form').serialize(),  // 表单数据
               success: function(data) {  // 成功回调函数
@@ -29,12 +29,13 @@
     </script>
 
     <h2>修改商品信息</h2>
-    <form method="POST" action="{{ url_for('submit_edit') }}">
+    <form method="POST" action="{{ url_for('submit_edit_one_item') }}">
         <div class="row">
             <div class="col-md-6">
                 <div class="form-group">
                     <label for="name">名称</label>
                     <input type="text" class="form-control" id="name" name="name" value={{ product.name }} required>
+                    <input type="hidden" name="id" value={{ product.id }}>
                 </div>
                 <div class="form-group">
                     <label for="category">品类</label>
@@ -93,37 +94,41 @@
                     <input type="number" class="form-control" id="list_price" name="list_price" value={{ product.list_price }}>
                 </div>
                  <div class="form-group">
-                    <label for="list_price">销售价</label>
-                    <input type="number" class="form-control" id="sales_price" name="sales_price" value={{ product.sales_price }}>
+                    <label for="list_price">成交价</label>
+                    <input type="number" class="form-control" id="sales_price" name="sales_price" value={{ product.sales_price }} >
                 </div>
                 <div class="form-group">
                     <label for="unit">销售员</label>
-                    <input type="text" class="form-control" id="salesperson" name="salesperson" value={{ product.salesperson }}>
+                    <input type="text" class="form-control" id="salesperson" name="salesperson" value='{{ product.salesperson }}' >
                 </div>
                 <div class="form-group">
                     <label for="cost_price">入库时间</label>
-                    <input type="datetime-local" class="form-control" id="in_time" name="in_time" {% if product.in_time %} value="{{ product.in_time.strftime('%Y-%m-%dT%H:%M:%S') }}" {% endif %}>
+                    <input type="datetime-local" class="form-control" id="in_time" name="in_time" {% if product.in_time %} value="{{ product.in_time.strftime('%Y-%m-%d %H:%M:%S') }}" {% endif %} required >
 
                 </div>
                 <div class="form-group">
                     <label for="list_price">出库时间</label>
-                    <input type="datetime-local" class="form-control" id="out_time" name="out_time" {% if product.out_time %} value="{{ product.out_time.strftime('%Y-%m-%dT%H:%M:%S') }}" {% endif %}>
+                    <input type="datetime-local" class="form-control" id="out_time" name="out_time" {% if product.out_time %} value="{{ product.out_time.strftime('%Y-%m-%d %H:%M:%S') }}" {% endif %} >
                 </div>
                 <div class="form-group">
                     <label for="supplier">报废时间</label>
-                    <input type="datetime-local" class="form-control" id="abandonment_time" name="abandonment_time" {% if product.abandonment_time %} value="{{ product.abandonment_time.strftime('%Y-%m-%dT%H:%M:%S') }}" {% endif %}>
+                    <input type="datetime-local" class="form-control" id="abandonment_time" name="abandonment_time" {% if product.abandonment_time %} value="{{ product.abandonment_time.strftime('%Y-%m-%d %H:%M:%S') }}" {% endif %} >
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="form-group">
+                    <label for="remark">备注</label>
+                    <input type="text" class="form-control" id="remark" name="remark" value={{ product.remark }}>
                 </div>
             </div>
         </div>
         <hr>
         <div class="row">
             <div class="col-md-12">
-
-            </div>
-            <div class="col-md-12">
                 <div class="form-group">
                     <img src="data:image/png;base64,{{ barcode_img }}" style="max-width: 10%; height: auto;">
-                    <input type="hidden" name="rawbarcode" value={{barcode}}>
                 </div>
             </div>
         </div>
@@ -161,7 +166,7 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    修改失败，请联系管理员.错误信息:
+                    修改失败或无改动。错误信息:
                     <p id="errorMessage"></p>
                 </div>
                 <div class="modal-footer">

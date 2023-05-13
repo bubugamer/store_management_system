@@ -1,0 +1,85 @@
+<head>
+	<meta charset="utf-8">
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.css">
+
+</head>
+
+{% extends 'base.html' %}
+
+{% block title %}镜片视图{% endblock %}
+
+{% block scripts %}
+    <script>
+        // Get the lens data from Flask
+        const lens_data = {{ lens_data|tojson }};
+
+        // 表头和首列的数据
+        const headers = ['0.00'];
+        for (let i = -0.5; i >= -5.00; i -= 0.25) {
+            headers.push(i.toFixed(2).toString());
+        }
+        console.log('log:' + headers)
+        const firstCol = ['0.00'];
+        for (let i = -0.5; i >= -10.00; i -= 0.25) {
+            firstCol.push(i.toFixed(2).toString());
+        }
+        for (let i = 0.5; i <= 6.00; i += 0.25) {
+            firstCol.push(i.toFixed(2).toString());
+        }
+
+        // 初始化表格数据
+        const data = [];
+        for (let i = 0; i < firstCol.length; i++) {
+            const row = []
+            for (let j = 0; j < headers.length; j++) {
+                // 查询当前行号和列号对应的商品数量
+                const attribute1 = firstCol[i];
+                const attribute2 = headers[j];
+                const key = `${attribute1},${attribute2}`;
+                let quantity = 0;
+                if (lens_data.hasOwnProperty(key)) {
+                    quantity = lens_data[key];
+                }
+                if(quantity != '0')
+                    row.push(quantity);
+                else
+                    row.push('');
+            }
+            data.push(row);
+        }
+
+        // 初始化handsontable
+        const container = document.getElementById('hot');
+        const hot = new Handsontable(container, {
+            licenseKey: 'non-commercial-and-evaluation',
+            data: data,
+            rowHeaders: firstCol,
+            colHeaders: headers,
+            readOnly: true,
+            fillHandle: {
+                direction: 'vertical'
+            },
+            cells: {
+                type: 'numeric'
+            }
+        });
+
+        // 新增按钮的点击事件
+        const addBtn = document.getElementById('add-btn');
+        // 点击“新增”按钮跳转到新增页面
+        addBtn.addEventListener('click', () => {
+            window.location.href = '/lens/add';
+        });
+
+
+    </script>
+{% endblock %}
+
+{% block content %}
+    <div class="row mb-3">
+        <div class="col-md-6 text-left">
+            <button id="add-btn"  class="btn btn-secondary">新增</button>
+        </div>
+    </div>
+    <div id="hot"></div>
+{% endblock %}

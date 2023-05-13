@@ -1,0 +1,156 @@
+<head>
+	<meta charset="utf-8">
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.css">
+
+</head>
+
+{% extends 'base.html' %}
+
+{% block title %}新增镜片{% endblock %}
+
+{% block scripts %}
+    <script>
+        // 表头和首列的数据
+        const headers = ['0.00'];
+        for (let i = -0.5; i >= -5.00; i -= 0.25) {
+            headers.push(i.toFixed(2).toString());
+        }
+        console.log('log:' + headers)
+        const firstCol = ['0.00'];
+        for (let i = -0.5; i >= -10.00; i -= 0.25) {
+            firstCol.push(i.toFixed(2).toString());
+        }
+        for (let i = 0.5; i <= 6.00; i += 0.25) {
+            firstCol.push(i.toFixed(2).toString());
+        }
+
+        // 初始化表格数据
+        const data = [];
+        for (let i = 0; i < firstCol.length; i++) {
+            //const row = [firstCol[i]];
+            const row = []
+            for (let j = 0; j < headers.length; j++) {
+                row.push('');
+            }
+            data.push(row);
+        }
+
+        // 初始化handsontable
+        const container = document.getElementById('hot');
+        const hot = new Handsontable(container, {
+            licenseKey: 'non-commercial-and-evaluation',
+            data: data,
+            rowHeaders: firstCol,
+            colHeaders: headers,
+            readOnly: false,
+            fillHandle: {
+                direction: 'vertical'
+            },
+            cells: {
+                type: 'numeric'
+            }
+        });
+
+        // 提交按钮的点击事件
+        const submitButton = document.getElementById('submit-btn');
+        submitButton.addEventListener('click', function () {
+            const formData = $('form').serializeArray();
+            const newData = hot.getData();
+
+            // 构建 key-value 对
+            const data = {};
+            for (let i = 0; i < newData.length; i++) {
+                for (let j = 0; j < newData[i].length; j++) {
+                    const value = newData[i][j];
+                    if (value >= 1) {
+                        const key = `${firstCol[i]},${headers[j]}`;
+                        data[key] = parseInt(value);
+                    }
+                }
+            }
+
+            // 将数据添加到 formData 中
+            formData.push({name: 'data', value: JSON.stringify(data)});
+
+            // 提交数据到 submit_lens 路由
+            $.post('/submit_lens', formData)
+                .done(function (response) {
+                    if(response.success){
+                        alert('添加成功！');
+                    }
+                    else{
+                        alert(response);
+                    }
+                    window.location.href = '/lens';
+                    hot.updateSettings({
+                        readOnly: true
+                    });
+                })
+                .fail(function () {
+                    alert('提交失败，请重试！');
+                });
+        });
+    </script>
+{% endblock %}
+
+{% block content %}
+    <a class="btn btn-secondary" href="{{ url_for('lens_view') }}">返回</a>
+    <hr style="visibility: hidden">
+    <h3>添加镜片</h3>
+    <hr>
+    <form method="POST" action="{{ url_for('submit_lens') }}">
+        <div id="hot"></div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="name">名称</label>
+                    <input type="text" class="form-control" id="name" name="name" value="" title="名称为品牌+型号+球镜+柱镜" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="brand">品牌</label>
+                    <input type="text" class="form-control" id="brand" name="brand" value="艾伦">
+                </div>
+                <div class="form-group">
+                    <label for="specification">型号</label>
+                    <input type="text" class="form-control" id="specification" name="specification"
+                           value="{{ session['specification'] }}">
+                </div>
+                <div class="form-group">
+                    <label for="remark">备注</label>
+                    <textarea class="form-control" id="remark" name="remark" rows="1">{{ session['remark'] }}</textarea>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="unit">单位</label>
+                    <input type="text" class="form-control" id="unit" name="unit" value="对">
+                </div>
+                <div class="form-group">
+                    <label for="cost_price">进货价</label>
+                    <input type="number" class="form-control" id="cost_price" name="cost_price"
+                           value="{{ session['cost_price'] }}">
+                </div>
+                <div class="form-group">
+                    <label for="list_price">挂牌价</label>
+                    <input type="number" class="form-control" id="list_price" name="list_price"
+                           value="{{ session['list_price'] }}">
+                </div>
+                <div class="form-group">
+                    <label for="supplier">供应商</label>
+                    <input type="text" class="form-control" id="supplier" name="supplier"
+                           value="{{ session['supplier'] }}">
+                </div>
+            </div>
+        </div>
+        <hr>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="form-group">
+                    <img src="{{ url_for('barcode_image', barcode=barcode) }}" style="max-width: 10%; height: auto;">
+                    <input type="hidden" name="rawbarcode" value={{ barcode }}><!-- 获取二维码数字 -->
+                </div>
+            </div>
+        </div>
+        <button type="button" class="btn btn-primary" id="submit-btn">提交</button>
+    </form>
+{% endblock %}

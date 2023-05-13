@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <script>
+
+        <!-- 点击提交按钮后的逻辑处理 -->
+        $(document).ready(function() {
+          $('#submit-btn').click(function(e) {
+            e.preventDefault();  // 阻止表单的默认提交行为
+            $.ajax({
+              url: '/submit_edit',  // 提交的url
+              type: 'POST',  // 提交的方法
+              data: $('form').serialize(),  // 表单数据
+              success: function(data) {  // 成功回调函数
+                  if (data.success) {
+                        $('#submit-success-modal').modal('show');
+                  } else {
+                        $('#errorMessage').text(data.message);
+                        $('#submit-fail-modal').modal('show');
+                  }
+              },
+              error: function(xhr, status, error) {  // 失败回调函数
+                  $('#errorMessage').text(data.message);
+                  $('#submit-fail-modal').modal('show');
+              }
+            });
+          });
+        });
+    </script>
+
+    <h2>修改商品信息</h2>
+    <form method="POST" action="{{ url_for('submit_edit') }}">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="name">名称</label>
+                    <input type="text" class="form-control" id="name" name="name" value={{ product.name }} required>
+                    <input type="hidden" name="id" value={{ product.id }}>
+                </div>
+                <div class="form-group">
+                    <label for="category">品类</label>
+                    <select class="form-control" id="category" name="category" required value={{ product.category }}>
+                        <option value="Lens"{% if product.category == 'Lens' %} selected{% endif %}>镜片</option>
+                        <option value="Frame"{% if product.category == 'Frame' %} selected{% endif %}>镜架</option>
+                        <option value="Contact Lens"{% if product.category == 'Contact Lens' %} selected{% endif %}>隐形眼镜</option>
+                        <option value="Sunglasses"{% if product.category == 'Sunglasses' %} selected{% endif %}>太阳镜</option>
+                        <option value="Other"{% if product.category == 'Other' %} selected{% endif %}>其他</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="brand">品牌</label>
+                    <input type="text" class="form-control" id="brand" name="brand" value={{ product.brand }}>
+                </div>
+                <div class="form-group">
+                    <label for="specification">型号</label>
+                    <input type="text" class="form-control" id="specification" name="specification" value={{ product.specification }}>
+                </div>
+                <div class="form-group">
+                    <label for="specification">属性1</label>
+                    <input type="text" class="form-control" id="attribute1" name="attribute1" value={{ product.attribute1 }}>
+                </div>
+                <div class="form-group">
+                    <label for="specification">属性2</label>
+                    <input type="text" class="form-control" id="attribute2" name="attribute2" value={{ product.attribute2 }}>
+                </div>
+                <div class="form-group">
+                    <label for="specification">属性3</label>
+                    <input type="text" class="form-control" id="attribute3" name="attribute3" value={{ product.attribute3 }}>
+                </div>
+                <div class="form-group">
+                    <label for="specification">属性4</label>
+                    <input type="text" class="form-control" id="attribute4" name="attribute4" value={{ product.attribute4 }}>
+                </div>
+                <div class="form-group">
+                    <label for="specification">属性5</label>
+                    <input type="text" class="form-control" id="attribute5" name="attribute5" value={{ product.attribute5 }}>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="unit">单位</label>
+                    <input type="text" class="form-control" id="unit" name="unit" value={{ product.unit }}>
+                </div>
+                <div class="form-group">
+                    <label for="cost_price">成本价</label>
+                    <input type="number" class="form-control" id="cost_price" name="cost_price" value={{ product.cost_price }}>
+                </div>
+                <div class="form-group">
+                    <label for="supplier">供应商</label>
+                    <input type="text" class="form-control" id="supplier" name="supplier" value={{ product.supplier }}>
+                </div>
+                <div class="form-group">
+                    <label for="list_price">挂牌价</label>
+                    <input type="number" class="form-control" id="list_price" name="list_price" value={{ product.list_price }}>
+                </div>
+                 <div class="form-group">
+                    <label for="list_price">成交价</label>
+                    <input type="number" class="form-control" id="sales_price" name="sales_price" value={{ product.sales_price }} readonly>
+                </div>
+                <div class="form-group">
+                    <label for="unit">销售员</label>
+                    <input type="text" class="form-control" id="salesperson" name="salesperson" value='{{ product.salesperson }}' readonly>
+                </div>
+                <div class="form-group">
+                    <label for="cost_price">入库时间</label>
+                    <input type="datetime-local" class="form-control" id="in_time" name="in_time" {% if product.in_time %} value="{{ product.in_time.strftime('%Y-%m-%d %H:%M:%S') }}" {% endif %} required readonly>
+
+                </div>
+                <div class="form-group">
+                    <label for="list_price">出库时间</label>
+                    <input type="datetime-local" class="form-control" id="out_time" name="out_time" {% if product.out_time %} value="{{ product.out_time.strftime('%Y-%m-%d %H:%M:%S') }}" {% endif %} readonly>
+                </div>
+                <div class="form-group">
+                    <label for="supplier">报废时间</label>
+                    <input type="datetime-local" class="form-control" id="abandonment_time" name="abandonment_time" {% if product.abandonment_time %} value="{{ product.abandonment_time.strftime('%Y-%m-%d %H:%M:%S') }}" {% endif %} readonly>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="form-group">
+                    <label for="remark">备注</label>
+                    <input type="text" class="form-control" id="remark" name="remark" value={{ product.remark }}>
+                </div>
+            </div>
+        </div>
+        <hr>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="form-group">
+                    <img src="data:image/png;base64,{{ barcode_img }}" style="max-width: 10%; height: auto;">
+                </div>
+            </div>
+        </div>
+        <button type="button" class="btn btn-primary" id="submit-btn">提交</button>
+    </form>
+
+    <!-- 成功后弹窗 -->
+    <div class="modal fade" id="submit-success-modal" tabindex="-1" role="dialog" aria-labelledby="submit-modal-label" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="submit-modal-label">提交成功</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body center-text">
+                  商品信息修改成功
+                </div>
+                <div class="modal-footer">
+                    <a class="btn btn-primary" href="{{ url_for('products_list') }}">返回</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 失败后弹窗 -->
+    <div class="modal fade" id="submit-fail-modal" tabindex="-1" role="dialog" aria-labelledby="submit-modal-label" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="submit-modal-label">修改失败</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    修改失败或无改动。错误信息:
+                    <p id="errorMessage"></p>
+                </div>
+                <div class="modal-footer">
+                    <a class="btn btn-primary" href="{{ url_for('products_list') }}">返回</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

@@ -52,7 +52,7 @@
             <div class="col-md-6">
                 <div class="form-group">
                     <label for="name">名称</label>
-                    <input type="text" class="form-control" id="name" name="name" value={{barcode}} required>
+                    <input type="text" class="form-control" id="name" name="name" value=“” title="如果为空，则名称为品牌+品类+型号">
                 </div>
                 <div class="form-group">
                     <label for="category">品类</label>
@@ -124,7 +124,7 @@
             <div class="col-md-12">
                 <div class="form-group">
                     <img src="{{ url_for('barcode_image', barcode=barcode) }}" style="max-width: 10%; height: auto;">
-                    <input type="hidden" name="rawbarcode" value={{barcode}}>
+                    <input type="hidden" name="rawbarcode" value={{barcode}}><!-- 获取二维码数字 -->
                 </div>
             </div>
         </div>
@@ -146,7 +146,7 @@
                 </div>
                 <div class="modal-footer">
                     <a class="btn btn-primary" href="{{ url_for('products_list') }}">返回</a>
-                    <a class="btn btn-primary" href="{{ url_for('add_product', category=session['category']) }}">继续录入</a>
+                    <a class="btn btn-primary" href="{{ url_for('add_product', category=category.value if category.value else 'Sunglasses') }}">继续录入</a>
                 </div>
             </div>
         </div>
