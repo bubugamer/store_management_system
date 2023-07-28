@@ -4,6 +4,8 @@ import json
 
 from barcode import Code128
 from barcode.writer import ImageWriter
+from barcode import EAN13
+from barcode.writer import ImageWriter
 from flask import Flask, render_template, request, redirect, jsonify, session, flash
 from flask import Response
 from io import BytesIO
@@ -96,6 +98,8 @@ def submit_product():
                 category_c = '太阳镜'
             elif category == 'Other':
                 category_c = '配件/护理液等'
+            else :
+                category_c = '未知'
             name = brand + category_c + specification
 
         for i in range(int(quantity)):
@@ -150,10 +154,12 @@ def add_stock(product_id):
 @app.route('/barcode/<barcode>', methods=['GET'])
 def barcode_image(barcode):
     # 生成Code128格式的条形码
-    barcode128 = Code128(barcode, writer=ImageWriter())
+    #barcode128 = Code128(barcode, writer=ImageWriter())
+    ean = EAN13(barcode, writer=ImageWriter())
+
     # 将条形码转换为字节流
     buffer = BytesIO()
-    barcode128.write(buffer, options={'scale': 0.1})
+    ean.write(buffer, options={'scale': 0.1})
     # 返回条形码图片
     return Response(buffer.getvalue(), mimetype='image/png')
 
@@ -301,7 +307,8 @@ def submit_edit():
         product_data = {}
 
         if request.form['name'] and request.form['name'] != product.name:
-            if Product.query.filter_by(name=request.form['name'], status=1):
+            if Product.query.filter_by(name=request.form['name'], status=1).first():
+                print(Product.query.filter_by(name=request.form['name'], status=1).first())
                 raise ValueError("same product name already existed")
             product_data['name'] = request.form['name']
             changed = True

@@ -2,8 +2,7 @@ import time
 import random
 
 import qrcode
-from barcode import EAN13
-from barcode.writer import ImageWriter
+
 
 class Util:
     @staticmethod

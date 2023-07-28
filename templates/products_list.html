@@ -23,7 +23,7 @@
 
 	<script>
 
-        $(document).ready(function() {
+        $(document).ready(function () {
             var producttable = $('#product-table').DataTable({
                 "dom": '<"row"<f"col-sm-12 col-md-4"><"col-sm-12 col-md-8"B>>rtip',
                 "buttons": [
@@ -41,15 +41,23 @@
                     }
                 ],
                 "order": [[0, "asc"]],
-                "pageLength":100,
+                "pageLength": 100,
                 "lengthChange": false,
                 "columnDefs": [
-                {
-                  "targets": 'no-sort',
-                  "orderable": false,
-                  "sortable": false
+                    {
+                        "targets": 'no-sort',
+                        "orderable": false,
+                        "sortable": false
+                    }
+                ],
+                // Use footerCallback to calculate the sum of the "Quantity" column
+                "footerCallback": function (tfoot, data, start, end, display) {
+                    var api = this.api();
+                    var total = api.column(6, {search: 'applied'}).data().reduce(function (a, b) {
+                        return parseInt(a) + parseInt(b);
+                    }, 0);
+                    $(api.column(6).footer()).html(total);
                 }
-              ]
             });
 
             var soldtable = $('#sold-table').DataTable({
@@ -295,6 +303,7 @@
                 <th data-sort="6">数量</th>
                 <th data-sort="7">入库时间</th>
                 <th class="no-sort">备注</th>
+                <th class="no-sort">条形码</th>
                 <th class="no-sort">操作</th>
 			</tr>
 		</thead>
@@ -313,6 +322,7 @@
                         <td>{{ quantity_dict[product.name] }}</td>
                         <td>{{ product.in_time.strftime('%Y-%m-%d %H:%M:%S') }}</td>
                         <td>{{ product.remark }}</td>
+                        <td>{{ product.barcode }}</td>
                         <td>
                             <button class="btn btn-light" onclick="sellProduct({{ product.id }})">销售</button>
 {#                            <button class="btn btn-light" onclick='discardProduct({{ {"id": product.id, "remark": product.remark} | tojson }})'>报废</button>#}
@@ -325,6 +335,21 @@
                 {% endif %}
 			{% endfor %}
 		</tbody>
+        <tfoot>
+        <tr id="footer-row">
+            <th>Total:</th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+        </tr>
+        </tfoot>
 	</table>
 
     <table id="sold-table" style="display: none;" class="table">
@@ -495,7 +520,7 @@
 {#                        <h5 class="modal-title" id="product-name"></h5>#}
                         <div class="col">
                             <h5 class="modal-title" id="viewproductmodalLabel">商品信息</h5>
-                            <img id="product-barcodeImg" src="" style="max-width: 150%; height: auto;">
+                            <img id="product-barcodeImg" src="" style="height: 80%; width: auto">
                         </div>
                     </div>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
