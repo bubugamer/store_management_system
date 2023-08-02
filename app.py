@@ -3,7 +3,6 @@ import datetime as dt
 import json
 
 from barcode import Code128
-from barcode.writer import ImageWriter
 from barcode import EAN13
 from barcode.writer import ImageWriter
 from flask import Flask, render_template, request, redirect, jsonify, session, flash
@@ -13,8 +12,8 @@ from models.product import Product, db
 from util import Util
 
 app = Flask(__name__)
-app.secret_key = '0123456789' #session数据的密钥
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///D:/workspace/dgmmansys/data/dgm.db' #指定数据库文件地址
+app.config.from_pyfile('config.py')
+app.secret_key = app.config['SECRET_KEY']
 db.init_app(app)
 
 # 检查数据库连接
